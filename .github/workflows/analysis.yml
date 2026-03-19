@@ -1,0 +1,58 @@
+name: COVID-19 Data Analysis
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * 1"
+
+jobs:
+  validate-data:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Validate CSV data files
+        run: |
+          python - <<'EOF'
+          import pandas as pd, sys, pathlib
+
+          files = {
+              "Wuhan-2019-nCoV.csv": ["date", "country", "confirmed"],
+              "world_daily_confirmed.csv": ["dateRep"],
+              "world_daily_death.csv": ["dateRep"],
+              "provinces.csv": None,
+              "population_2018.csv": None,
+              "travel_Hubei_Wuhan_20200101_20200123.csv": None,
+          }
+
+          ok = True
+          for fname, required_cols in files.items():
+              p = pathlib.Path(fname)
+              if not p.exists():
+                  print(f"MISSING: {fname}")
+                  ok = False
+                  continue
+              df = pd.read_csv(p)
+              if required_cols:
+                  missing = [c for c in required_cols if c not in df.columns]
+                  if missing:
+                      print(f"ERROR {fname}: missing columns {missing}")
+                      ok = False
+                      continue
+              print(f"OK  {fname}  ({len(df)} rows)")
+          sys.exit(0 if ok else 1)
+          EOF
