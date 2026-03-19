@@ -1,3 +1,35 @@
 This is the data depository for the paper: 
 Wu K, Darcet D, Wang Q, et al. Generalized logistic growth modeling of the COVID-19 outbreak: comparing the dynamics in the 29 provinces in China and in the rest of the world[J]. Nonlinear Dynamics, 2020, 101(3): 1561-1581.
 https://link.springer.com/article/10.1007/S11071-020-05862-6
+
+--- Remote / persistent development ---
+
+Q: I connect to a remote SSH server from VS Code (with GitHub Copilot), do my work,
+   then quit VS Code, can the work continue on the server after I disconnect?
+
+Short answer: GitHub Copilot is an extension that runs inside VS Code. Once you close
+VS Code the Copilot session ends. However, the server-side work can continue in
+several ways:
+
+(a) tmux / screen  -- start a terminal multiplexer session on the server before
+    launching long-running scripts. The session keeps running after you disconnect.
+    Example:
+      ssh user@server
+      tmux new -s work        # create a named session
+      python my_analysis.py   # start your script inside tmux
+      Ctrl-b d                # detach (session stays alive)
+    Reconnect later:
+      ssh user@server && tmux attach -t work
+
+(b) GitHub Actions  -- tasks defined in .github/workflows/ run automatically on
+    GitHub-hosted runners whenever you push code, on a schedule, or on demand
+    (workflow_dispatch). No local VS Code session is required.
+
+(c) VS Code Dev Containers  -- the .devcontainer/devcontainer.json in this repository
+    pre-configures a Python environment with all required packages and the GitHub
+    Copilot extension. Open the repository folder in VS Code, press F1, and choose
+    "Dev Containers: Reopen in Container" (or "Remote-SSH: Connect to Host" for a
+    plain SSH workflow). The container keeps the environment reproducible regardless
+    of the host machine.
+
+Code for the paper is available on request (see open issues).
